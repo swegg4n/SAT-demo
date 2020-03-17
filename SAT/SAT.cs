@@ -29,8 +29,8 @@ namespace SAT
 
         public SAT()
         {
-            axis1Origin = new Point(Game1.WindowSize.X - 75, Game1.WindowSize.Y / 2);
-            axis2Origin = new Point(Game1.WindowSize.X - 25, Game1.WindowSize.Y - 25);
+            axis1Origin = new Point(Game1.WindowSize.X - 150, Game1.WindowSize.Y / 2);
+            axis2Origin = new Point(Game1.WindowSize.X - 150, Game1.WindowSize.Y / 2);
 
             rectangles = new Rectangle[2];
             vectors = new Vector2[4];

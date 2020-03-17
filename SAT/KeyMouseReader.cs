@@ -18,6 +18,10 @@ namespace SAT
         {
             return mouseState.LeftButton == ButtonState.Pressed;
         }
+        public static bool RMB_Hold()
+        {
+            return mouseState.RightButton == ButtonState.Pressed;
+        }
         public static bool LMB_Click()
         {
             return LMB_Hold() && oldMouseState.LeftButton == ButtonState.Released;

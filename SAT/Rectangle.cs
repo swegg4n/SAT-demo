@@ -13,7 +13,7 @@ namespace SAT
         public readonly Point[] vertices;
 
         private Vector2 position;
-        public readonly double rotation;
+        public double rotation;
         private readonly double scaleX, scaleY;
 
         int top, bottom, left, right;
@@ -71,6 +71,13 @@ namespace SAT
             else
             {
                 canMove = false;
+            }
+
+            if (KeyMouseReader.RMB_Hold() && Contains(KeyMouseReader.mousePos))
+            {
+                rotation += 0.01;
+                UpdateVertices();
+                UpdateBounds();
             }
         }
 
