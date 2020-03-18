@@ -20,9 +20,7 @@ namespace SAT
 
         private Rectangle[] axes;
 
-        Vector2[,,] projVertices;
         Vector2[,,] projVerticesVisual;
-        Tuple<Vector2, Vector2>[,] minMaxProjVertices;
         Tuple<Vector2, Vector2>[,] minMaxProjVerticesVisual;
 
         Rectangle[] visualProjections;
@@ -38,9 +36,7 @@ namespace SAT
             vectors = new Vector2[4];
             axes = new Rectangle[4];
 
-            projVertices = new Vector2[2, 4, 4];
             projVerticesVisual = new Vector2[2, 4, 4];
-            minMaxProjVertices = new Tuple<Vector2, Vector2>[2, 4];
             minMaxProjVerticesVisual = new Tuple<Vector2, Vector2>[2, 4];
 
             visualProjections = new Rectangle[8];
@@ -51,15 +47,16 @@ namespace SAT
             UpdateProjection(rect1, rect2);
         }
 
+
         private void UpdateProjection(Rectangle rect1, Rectangle rect2)
         {
             rectangles[0] = rect1;
             rectangles[1] = rect2;
 
-            vectors[0] = rect1.vertices[0].ToVector2() - rect1.vertices[1].ToVector2();
-            vectors[1] = rect1.vertices[0].ToVector2() - rect1.vertices[2].ToVector2();
-            vectors[2] = rect2.vertices[0].ToVector2() - rect2.vertices[1].ToVector2();
-            vectors[3] = rect2.vertices[0].ToVector2() - rect2.vertices[2].ToVector2();
+            vectors[0] = Vector2.Normalize(rect1.vertices[0].ToVector2() - rect1.vertices[1].ToVector2());
+            vectors[1] = Vector2.Normalize(rect1.vertices[0].ToVector2() - rect1.vertices[2].ToVector2());
+            vectors[2] = Vector2.Normalize(rect2.vertices[0].ToVector2() - rect2.vertices[1].ToVector2());
+            vectors[3] = Vector2.Normalize(rect2.vertices[0].ToVector2() - rect2.vertices[2].ToVector2());
 
             axes[0] = new Rectangle(axis1Origin.X, axis1Origin.Y, -rect1.rotation, AXES_WIDTH, AXES_LENGTH);
             axes[1] = new Rectangle(axis1Origin.X, axis1Origin.Y, -rect1.rotation + Math.PI / 2, AXES_WIDTH, AXES_LENGTH);
@@ -79,28 +76,15 @@ namespace SAT
 
                     for (int k = 0; k < rectangles[i].vertices.Length; k++)
                     {
-                        projVertices[i, j, k] = Project(rectangles[i].vertices[k], vectors[j]);
                         projVerticesVisual[i, j, k] = ProjectVisual(rectangles[i].vertices[k], vectors[j], axisOrigin);
-                        minMaxProjVertices[i, j] = new Tuple<Vector2, Vector2>(projVertices[i, j, k], projVertices[i, j, k]);
                         minMaxProjVerticesVisual[i, j] = new Tuple<Vector2, Vector2>(projVerticesVisual[i, j, k], projVerticesVisual[i, j, k]);
                     }
                 }
             }
-            GetMinMax();
             GetMinMaxVisual();
             colliding = IsColliding();
         }
 
-        private Vector2 Project(Point P, Vector2 v)
-        {
-            v = Vector2.Normalize(v);
-            Vector2 A = v;
-            Vector2 AP = P.ToVector2() - A;
-            Vector2 u_bis = (AP.X * v.X + AP.Y * v.Y) / (float)(Math.Pow(v.X, 2) + Math.Pow(v.Y, 2)) * v;
-            Vector2 u_prim = AP - u_bis;
-            Vector2 Q = new Vector2(P.X - u_prim.X, P.Y - u_prim.Y);
-            return Q;//return new Vector2(Math.Abs(Q.X), Math.Abs(Q.Y));
-        }
 
         private Vector2 ProjectVisual(Point P, Vector2 v, Vector2 axisOrigin)
         {
@@ -112,31 +96,6 @@ namespace SAT
             return Q;
         }
 
-        private void GetMinMax()
-        {
-            for (int i = 0; i < rectangles.Length; i++)
-            {
-                for (int j = 0; j < vectors.Length; j++)
-                {
-                    for (int k = 0; k < rectangles[i].vertices.Length; k++)
-                    {
-                        float testDistance = (float)Math.Sqrt(Math.Pow(projVertices[i, j, k].X, 2) + Math.Pow(projVertices[i, j, k].Y, 2));
-
-                        float currentMinDistance = (float)Math.Sqrt(Math.Pow(minMaxProjVertices[i, j].Item1.X, 2) + Math.Pow(minMaxProjVertices[i, j].Item1.Y, 2));
-                        float currentMaxDistance = (float)Math.Sqrt(Math.Pow(minMaxProjVertices[i, j].Item2.X, 2) + Math.Pow(minMaxProjVertices[i, j].Item2.Y, 2));
-
-                        if (testDistance < currentMinDistance)
-                        {
-                            minMaxProjVertices[i, j] = new Tuple<Vector2, Vector2>(projVertices[i, j, k], minMaxProjVertices[i, j].Item2);
-                        }
-                        if (testDistance > currentMaxDistance)
-                        {
-                            minMaxProjVertices[i, j] = new Tuple<Vector2, Vector2>(minMaxProjVertices[i, j].Item1, projVertices[i, j, k]);
-                        }
-                    }
-                }
-            }
-        }
 
         private void GetMinMaxVisual()
         {
@@ -153,25 +112,13 @@ namespace SAT
 
                     for (int k = 0; k < rectangles[i].vertices.Length; k++)
                     {
-                        Vector2 projVector = projVerticesVisual[i, j, k] - axisOrigin;
-                        float testDistance = (float)Math.Sqrt(Math.Pow(projVector.X, 2) + Math.Pow(projVector.Y, 2));
-
-                        Vector2 currentMaxVector = minMaxProjVerticesVisual[i, j].Item2 - axisOrigin;
-                        float currentMaxDistance = (float)Math.Sqrt(Math.Pow(currentMaxVector.X, 2) + Math.Pow(currentMaxVector.Y, 2));
-
-                        if (testDistance > currentMaxDistance)
-                        {
-                            minMaxProjVerticesVisual[i, j] = new Tuple<Vector2, Vector2>(minMaxProjVerticesVisual[i, j].Item1, projVerticesVisual[i, j, k]);
-                        }
-                    }
-                    for (int k = 0; k < rectangles[i].vertices.Length; k++)
-                    {
-                        float testDistance = Vector2.Distance(minMaxProjVerticesVisual[i, j].Item2, projVerticesVisual[i, j, k]);
-                        float currentDistance = Vector2.Distance(minMaxProjVerticesVisual[i, j].Item1, minMaxProjVerticesVisual[i, j].Item2);
-
-                        if (testDistance > currentDistance)
+                        if (projVerticesVisual[i, j, k].X < minMaxProjVerticesVisual[i, j].Item1.X)
                         {
                             minMaxProjVerticesVisual[i, j] = new Tuple<Vector2, Vector2>(projVerticesVisual[i, j, k], minMaxProjVerticesVisual[i, j].Item2);
+                        }
+                        if (projVerticesVisual[i, j, k].X > minMaxProjVerticesVisual[i, j].Item2.X)
+                        {
+                            minMaxProjVerticesVisual[i, j] = new Tuple<Vector2, Vector2>(minMaxProjVerticesVisual[i, j].Item1, projVerticesVisual[i, j, k]);
                         }
                     }
                 }
@@ -192,13 +139,11 @@ namespace SAT
         {
             for (int axis = 0; axis < vectors.Length; axis++)
             {
-                //if (Vector2.Distance(Vector2.Zero, minMaxProjVertices[0, axis].Item2) < Vector2.Distance(Vector2.Zero, minMaxProjVertices[1, axis].Item1) ||
-                //    Vector2.Distance(Vector2.Zero, minMaxProjVertices[1, axis].Item2) < Vector2.Distance(Vector2.Zero, minMaxProjVertices[0, axis].Item1))
-                //{
-                //    return false;
-                //}
+                float sigmaDistance = Vector2.Distance(minMaxProjVerticesVisual[0, axis].Item1, minMaxProjVerticesVisual[0, axis].Item2) +
+                    Vector2.Distance(minMaxProjVerticesVisual[1, axis].Item1, minMaxProjVerticesVisual[1, axis].Item2);
 
-                if (minMaxProjVertices[0, axis].Item2.X < minMaxProjVertices[1, axis].Item1.X || minMaxProjVertices[1, axis].Item2.X < minMaxProjVertices[0, axis].Item1.X)
+                if (Vector2.Distance(minMaxProjVerticesVisual[0, axis].Item1, minMaxProjVerticesVisual[1, axis].Item2) > sigmaDistance ||
+                    Vector2.Distance(minMaxProjVerticesVisual[1, axis].Item1, minMaxProjVerticesVisual[0, axis].Item2) > sigmaDistance)
                 {
                     return false;
                 }
@@ -206,6 +151,7 @@ namespace SAT
 
             return true;
         }
+
 
         Color[] colors = { Color.Green, Color.Blue };
         public void Draw(SpriteBatch spriteBatch)

@@ -46,7 +46,7 @@ namespace SAT
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             rectangles.Add(new Rectangle(625, 425, MathHelper.Pi / 6, 200f, 100f));
-            rectangles.Add(new Rectangle(550, 330, 0, 75f, 75f));
+            rectangles.Add(new Rectangle(550, 330, 0.01f, 75f, 75f));
 
             sat = new SAT();
         }
@@ -94,7 +94,7 @@ namespace SAT
 
                 for (int i = 0; i < rectangles.Count; i++)
                 {
-                    rectangles[i].Draw(spriteBatch,colors[i]);
+                    rectangles[i].Draw(spriteBatch, colors[i]);
                 }
 
                 sat.Draw(spriteBatch);
