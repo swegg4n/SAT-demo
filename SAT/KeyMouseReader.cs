@@ -10,6 +10,7 @@ namespace SAT
 {
     static class KeyMouseReader
     {
+        static KeyboardState keyboardState, oldKeyboardState = Keyboard.GetState();
         public static MouseState mouseState, oldMouseState = Mouse.GetState();
         public static Point mousePos, oldMousePos;
 
@@ -26,9 +27,16 @@ namespace SAT
         {
             return LMB_Hold() && oldMouseState.LeftButton == ButtonState.Released;
         }
-            
+        public static bool IsPressed(Keys key)
+        {
+            return keyboardState.IsKeyDown(key) && oldKeyboardState.IsKeyUp(key) ;
+        }
+
         public static void Update()
         {
+            oldKeyboardState = keyboardState;
+            keyboardState = Keyboard.GetState();
+
             oldMouseState = mouseState;
             mouseState = Mouse.GetState();
 

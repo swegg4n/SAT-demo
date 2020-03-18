@@ -93,6 +93,7 @@ namespace SAT
 
         private Vector2 Project(Point P, Vector2 v)
         {
+            v = Vector2.Normalize(v);
             Vector2 A = v;
             Vector2 AP = P.ToVector2() - A;
             Vector2 u_bis = (AP.X * v.X + AP.Y * v.Y) / (float)(Math.Pow(v.X, 2) + Math.Pow(v.Y, 2)) * v;
@@ -191,8 +192,13 @@ namespace SAT
         {
             for (int axis = 0; axis < vectors.Length; axis++)
             {
-                if (Vector2.Distance(Vector2.Zero,minMaxProjVertices[0,axis].Item2) < Vector2.Distance(Vector2.Zero, minMaxProjVertices[1, axis].Item1) ||
-                    Vector2.Distance(Vector2.Zero, minMaxProjVertices[1, axis].Item2) < Vector2.Distance(Vector2.Zero, minMaxProjVertices[0, axis].Item1))
+                //if (Vector2.Distance(Vector2.Zero, minMaxProjVertices[0, axis].Item2) < Vector2.Distance(Vector2.Zero, minMaxProjVertices[1, axis].Item1) ||
+                //    Vector2.Distance(Vector2.Zero, minMaxProjVertices[1, axis].Item2) < Vector2.Distance(Vector2.Zero, minMaxProjVertices[0, axis].Item1))
+                //{
+                //    return false;
+                //}
+
+                if (minMaxProjVertices[0, axis].Item2.X < minMaxProjVertices[1, axis].Item1.X || minMaxProjVertices[1, axis].Item2.X < minMaxProjVertices[0, axis].Item1.X)
                 {
                     return false;
                 }

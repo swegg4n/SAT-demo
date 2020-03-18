@@ -13,7 +13,8 @@ namespace SAT
         SpriteBatch spriteBatch;
 
         public static Texture2D square;
-        public static Texture2D px1x1;
+        public static SpriteFont font;
+
         public static Point WindowSize { get { return new Point(1200, 800); } }
 
         List<Rectangle> rectangles = new List<Rectangle>();
@@ -40,7 +41,7 @@ namespace SAT
         protected override void LoadContent()
         {
             square = Content.Load<Texture2D>("Square");
-            px1x1 = Content.Load<Texture2D>("1x1px");
+            font = Content.Load<SpriteFont>("font");
 
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
@@ -55,6 +56,11 @@ namespace SAT
         {
             KeyMouseReader.Update();
 
+            if (KeyMouseReader.IsPressed(Keys.D1))
+            {
+                DEBUG = !DEBUG;
+            }
+
             foreach (Rectangle rect in rectangles)
             {
                 rect.Update();
@@ -66,6 +72,7 @@ namespace SAT
         }
 
 
+        Vector2 textPos = new Vector2(25, 25);
         Color[] colors = { Color.Green, Color.Blue };
         protected override void Draw(GameTime gameTime)
         {
@@ -76,11 +83,15 @@ namespace SAT
             else
             {
                 GraphicsDevice.Clear(Color.White);
-
             }
 
             spriteBatch.Begin();
             {
+                spriteBatch.DrawString(font, "LMB - Move Rectangles", textPos, Color.Black);
+                spriteBatch.DrawString(font, "RMB - Rotate Rectangles", new Vector2(textPos.X, textPos.Y + 25), Color.Black);
+                spriteBatch.DrawString(font, "1 - Toggle Debug", new Vector2(textPos.X, textPos.Y + 50), Color.Black);
+
+
                 for (int i = 0; i < rectangles.Count; i++)
                 {
                     rectangles[i].Draw(spriteBatch,colors[i]);
