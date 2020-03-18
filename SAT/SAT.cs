@@ -25,6 +25,8 @@ namespace SAT
         Tuple<Vector2, Vector2>[,] minMaxProjVertices;
         Tuple<Vector2, Vector2>[,] minMaxProjVerticesVisual;
 
+        Rectangle[] visualProjections;
+
         public bool colliding;
 
         public SAT()
@@ -40,6 +42,8 @@ namespace SAT
             projVerticesVisual = new Vector2[2, 4, 4];
             minMaxProjVertices = new Tuple<Vector2, Vector2>[2, 4];
             minMaxProjVerticesVisual = new Tuple<Vector2, Vector2>[2, 4];
+
+            visualProjections = new Rectangle[8];
         }
 
         public void Update(Rectangle rect1, Rectangle rect2)
@@ -94,7 +98,7 @@ namespace SAT
             Vector2 u_bis = (AP.X * v.X + AP.Y * v.Y) / (float)(Math.Pow(v.X, 2) + Math.Pow(v.Y, 2)) * v;
             Vector2 u_prim = AP - u_bis;
             Vector2 Q = new Vector2(P.X - u_prim.X, P.Y - u_prim.Y);
-            return new Vector2(Math.Abs(Q.X), Math.Abs(Q.Y));
+            return Q;//return new Vector2(Math.Abs(Q.X), Math.Abs(Q.Y));
         }
 
         private Vector2 ProjectVisual(Point P, Vector2 v, Vector2 axisOrigin)
@@ -149,24 +153,37 @@ namespace SAT
                     for (int k = 0; k < rectangles[i].vertices.Length; k++)
                     {
                         Vector2 projVector = projVerticesVisual[i, j, k] - axisOrigin;
-
                         float testDistance = (float)Math.Sqrt(Math.Pow(projVector.X, 2) + Math.Pow(projVector.Y, 2));
 
-                        Vector2 currentMinVector = minMaxProjVerticesVisual[i, j].Item1 - axisOrigin;
                         Vector2 currentMaxVector = minMaxProjVerticesVisual[i, j].Item2 - axisOrigin;
-                        float currentMinDistance = (float)Math.Sqrt(Math.Pow(currentMinVector.X, 2) + Math.Pow(currentMinVector.Y, 2));
                         float currentMaxDistance = (float)Math.Sqrt(Math.Pow(currentMaxVector.X, 2) + Math.Pow(currentMaxVector.Y, 2));
 
-                        if (testDistance < currentMinDistance)
-                        {
-                            minMaxProjVerticesVisual[i, j] = new Tuple<Vector2, Vector2>(projVerticesVisual[i, j, k], minMaxProjVerticesVisual[i, j].Item2);
-                        }
                         if (testDistance > currentMaxDistance)
                         {
                             minMaxProjVerticesVisual[i, j] = new Tuple<Vector2, Vector2>(minMaxProjVerticesVisual[i, j].Item1, projVerticesVisual[i, j, k]);
                         }
                     }
+                    for (int k = 0; k < rectangles[i].vertices.Length; k++)
+                    {
+                        float testDistance = Vector2.Distance(minMaxProjVerticesVisual[i, j].Item2, projVerticesVisual[i, j, k]);
+                        float currentDistance = Vector2.Distance(minMaxProjVerticesVisual[i, j].Item1, minMaxProjVerticesVisual[i, j].Item2);
+
+                        if (testDistance > currentDistance)
+                        {
+                            minMaxProjVerticesVisual[i, j] = new Tuple<Vector2, Vector2>(projVerticesVisual[i, j, k], minMaxProjVerticesVisual[i, j].Item2);
+                        }
+                    }
                 }
+            }
+
+            int index = 0;
+            foreach (var minMaxProj in minMaxProjVerticesVisual)
+            {
+                Vector2 pos = (minMaxProj.Item1 + minMaxProj.Item2) / 2;
+                float width = Vector2.Distance(minMaxProj.Item1, minMaxProj.Item2);
+
+                visualProjections[index] = new Rectangle(pos.ToPoint().X, pos.ToPoint().Y, -axes[index % 4].rotation + Math.PI / 2, 10, width);
+                index++;
             }
         }
 
@@ -174,8 +191,8 @@ namespace SAT
         {
             for (int axis = 0; axis < vectors.Length; axis++)
             {
-                if (minMaxProjVertices[1, axis].Item1.X > minMaxProjVertices[0, axis].Item2.X || minMaxProjVertices[1, axis].Item1.Y > minMaxProjVertices[0, axis].Item2.Y ||
-                    minMaxProjVertices[0, axis].Item1.X > minMaxProjVertices[1, axis].Item2.X || minMaxProjVertices[0, axis].Item1.Y > minMaxProjVertices[1, axis].Item2.Y)
+                if (Vector2.Distance(Vector2.Zero,minMaxProjVertices[0,axis].Item2) < Vector2.Distance(Vector2.Zero, minMaxProjVertices[1, axis].Item1) ||
+                    Vector2.Distance(Vector2.Zero, minMaxProjVertices[1, axis].Item2) < Vector2.Distance(Vector2.Zero, minMaxProjVertices[0, axis].Item1))
                 {
                     return false;
                 }
@@ -184,27 +201,35 @@ namespace SAT
             return true;
         }
 
+        Color[] colors = { Color.Green, Color.Blue };
         public void Draw(SpriteBatch spriteBatch)
         {
+            for (int i = 0; i < axes.Length; i++)
+            {
+                axes[i].Draw(spriteBatch, colors[i / 2]);
+            }
+
             if (Game1.DEBUG)
             {
-                for (int i = 0; i < axes.Length; i++)
+                foreach (var minMaxProj in minMaxProjVerticesVisual)
                 {
-                    axes[i].Draw(spriteBatch);
+                    spriteBatch.Draw(Game1.square, minMaxProj.Item1, null, Color.LightGray, 0.0f, Game1.square.Bounds.Center.ToVector2(),
+                           new Vector2(0.75f, 0.75f), SpriteEffects.None, 1.0f);
+                    spriteBatch.Draw(Game1.square, minMaxProj.Item2, null, Color.Black, 0.0f, Game1.square.Bounds.Center.ToVector2(),
+                            new Vector2(0.75f, 0.75f), SpriteEffects.None, 1.0f);
                 }
 
                 foreach (var pV in projVerticesVisual)
                 {
-                    spriteBatch.Draw(Game1.square, pV, null, Color.Green, 0.0f, Game1.square.Bounds.Center.ToVector2(),
-                            new Vector2(0.25f, 0.25f), SpriteEffects.None, 1.0f);
+                    spriteBatch.Draw(Game1.square, pV, null, Color.Gray, 0.0f, Game1.square.Bounds.Center.ToVector2(),
+                            new Vector2(0.35f, 0.35f), SpriteEffects.None, 1.0f);
                 }
-
-                foreach (var mmV in minMaxProjVerticesVisual)
+            }
+            else
+            {
+                foreach (var visualProj in visualProjections)
                 {
-                    spriteBatch.Draw(Game1.square, mmV.Item1, null, Color.LightBlue, 0.0f, Game1.square.Bounds.Center.ToVector2(),
-                           new Vector2(0.5f, 0.5f), SpriteEffects.None, 1.0f);
-                    spriteBatch.Draw(Game1.square, mmV.Item2, null, Color.DarkBlue, 0.0f, Game1.square.Bounds.Center.ToVector2(),
-                            new Vector2(0.5f, 0.5f), SpriteEffects.None, 1.0f);
+                    visualProj.Draw(spriteBatch, new Color(0, 0, 0, 100));
                 }
             }
         }

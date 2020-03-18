@@ -104,7 +104,6 @@ namespace SAT
             }
         }
 
-
         private bool Contains(Point point)
         {
             if (point.X < left || point.X > right || point.Y < top || point.Y > bottom)
@@ -113,9 +112,9 @@ namespace SAT
             return true;
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, Color color)
         {
-            spriteBatch.Draw(Game1.square, position, null, Color.Gray, (float)rotation, Game1.square.Bounds.Center.ToVector2(),
+            spriteBatch.Draw(Game1.square, position, null, color, (float)rotation, Game1.square.Bounds.Center.ToVector2(),
                 new Vector2((float)scaleX, (float)scaleY), SpriteEffects.None, 1.0f);
 
             if (Game1.DEBUG)

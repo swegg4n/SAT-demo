@@ -7,7 +7,7 @@ namespace SAT
 {
     public class Game1 : Game
     {
-        public static bool DEBUG = true;
+        public static bool DEBUG = false;
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -66,6 +66,7 @@ namespace SAT
         }
 
 
+        Color[] colors = { Color.Green, Color.Blue };
         protected override void Draw(GameTime gameTime)
         {
             if (sat.colliding)
@@ -80,9 +81,9 @@ namespace SAT
 
             spriteBatch.Begin();
             {
-                foreach (Rectangle r in rectangles)
+                for (int i = 0; i < rectangles.Count; i++)
                 {
-                    r.Draw(spriteBatch);
+                    rectangles[i].Draw(spriteBatch,colors[i]);
                 }
 
                 sat.Draw(spriteBatch);
